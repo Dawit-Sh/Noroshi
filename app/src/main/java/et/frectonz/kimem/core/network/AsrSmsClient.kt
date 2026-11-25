@@ -69,7 +69,7 @@ class AsrSmsClient(
     /** The panel posts this and moves on; only a clear failure is an error here. */
     suspend fun markRead(box: SmsBox, index: String): ActionResult {
         set(FILE, AsrSmsRequests.markRead(box, index))
-        val status = poll(SmsCmd.MarkRead, POLLS)
+        val status = poll(SmsCmd.MarkRead, MARK_POLLS)
         if (status != null && !status.done) throw failed(SmsCmd.MarkRead, status)
         return ActionResult(SmsCmd.MarkRead.kind, SUCCESS)
     }
@@ -172,6 +172,9 @@ class AsrSmsClient(
         const val POLL_MS = 1_500L
         const val POLLS = 10
         const val SEND_POLLS = 40
+
+        /** Mark read is fire and forget in the panel, so it gets only a quick look. */
+        const val MARK_POLLS = 2
 
         /** Each folder's block of ids: inbox 1.., sent 100001.., SIM 200001.., drafts 300001.. */
         const val BOX_SPAN = 100_000
