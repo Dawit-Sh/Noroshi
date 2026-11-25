@@ -29,6 +29,8 @@ class AsrRouter(
     /** The login and the XML calls; SMS and USSD build on its `get` / `set`. */
     val transport = AsrTransport(http, host, username, password)
 
+    private val sms = AsrSmsClient(transport::get, transport::set)
+
     override suspend fun login() = transport.login()
 
     override suspend fun logout() = transport.logout()
@@ -45,6 +47,7 @@ class AsrRouter(
         ReportKind.Device -> status().device()
         ReportKind.Wifi -> status().wifi()
         ReportKind.Devices -> devices()
+        ReportKind.SmsInfo -> sms.info()
         else -> unsupported()
     }
 
@@ -59,13 +62,13 @@ class AsrRouter(
 
     private fun unsupported(): Nothing = throw RouterException(res(R.string.err_not_supported, res(type.label)))
 
-    override suspend fun smsInbox(): SmsInbox = unsupported()
-    override suspend fun sms(id: Int): Message = unsupported()
-    override suspend fun sendSms(number: String, message: String): ActionResult = unsupported()
-    override suspend fun deleteSms(ids: Iterable<Int>): ActionResult = unsupported()
-    override suspend fun deleteAllSms(): ActionResult? = unsupported()
-    override suspend fun markSms(ids: Iterable<Int>): ActionResult = unsupported()
-    override suspend fun markAllSms(): ActionResult? = unsupported()
+    override suspend fun smsInbox(): SmsInbox = sms.inbox()
+    override suspend fun sms(id: Int): Message = sms.message(id)
+    override suspend fun sendSms(number: String, message: String): ActionResult = sms.sendSms(number, message)
+    override suspend fun deleteSms(ids: Iterable<Int>): ActionResult = sms.deleteSms(ids)
+    override suspend fun deleteAllSms(): ActionResult? = sms.deleteAllSms()
+    override suspend fun markSms(ids: Iterable<Int>): ActionResult = sms.markSms(ids)
+    override suspend fun markAllSms(): ActionResult? = sms.markAllSms()
 
     override suspend fun ussdSend(code: String) {
         unsupported()

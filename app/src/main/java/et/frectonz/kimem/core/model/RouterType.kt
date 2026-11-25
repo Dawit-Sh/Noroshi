@@ -55,8 +55,9 @@ enum class RouterType(
             ReportKind.Device,
             ReportKind.Wifi,
             ReportKind.Devices,
+            ReportKind.SmsInfo,
         ),
-        setOf(Feature.Reboot),
+        setOf(Feature.Sms, Feature.Reboot),
     );
 
     fun has(feature: Feature): Boolean = feature in features
