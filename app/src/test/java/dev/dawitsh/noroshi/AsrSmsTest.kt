@@ -238,6 +238,43 @@ class AsrSmsTest {
         assertEquals("+251700060105", info.center)
     }
 
+    /**
+     * The Stellar's real SIM list with one message (2026-11-25, number and text replaced): the
+     * sender comes as `;number`, the hex in upper case, the name in the SIM's own series.
+     */
+    @Test
+    fun realSimMessageParses() {
+        val page = AsrSmsPage.parse(fixture("message_sim_one.xml"), SmsBox.Sim)
+        assertEquals(1, page.totalPages)
+        val sms = page.messages.single()
+        assertEquals("SRCV1", sms.index)
+        assertEquals("", sms.name)
+        assertEquals("+251900000032", sms.number)
+        assertEquals("Test text from a phone ", sms.text)
+        assertEquals(LocalDateTime.of(2026, 11, 25, 12, 36, 52), sms.received)
+        assertEquals(MessageStatus.Unread, sms.messageStatus())
+    }
+
+    @Test
+    fun realSimMessageGetsASimId() = runTest {
+        val raw = javaClass.getResourceAsStream("/stellar/message_sim_one.xml")!!.bufferedReader().readText()
+        val item = Regex("<Item[\\s\\S]*?</Item>").find(raw)!!.value
+        val router = FakeRouter(mapOf(SmsBox.Sim to listOf(listOf(item))))
+        val message = router.client().inbox().messages.single()
+        assertEquals(200_001, message.id)
+        assertEquals("+251900000032", message.number)
+        assertEquals("Test text from a phone", router.client().message(200_001).content.trim())
+    }
+
+    /** The device inbox numbers its messages from 0 (`LRCV0` was a real one). */
+    @Test
+    fun inboxNamesStartAtZero() = runTest {
+        val router = FakeRouter(mapOf(SmsBox.Inbox to listOf(listOf(item("LRCV0")))), statuses = listOf(status("6", "3")))
+        assertEquals(listOf(0), router.client().inbox().messages.map { it.id })
+        router.client().deleteSms(listOf(0))
+        assertTrue(router.calls.any { it.second.contains("<delete_message_id>LRCV0,</delete_message_id>") })
+    }
+
     @Test
     fun statusesMapToTheScreensTags() {
         assertEquals(AsrSmsStatus.SendFailed, AsrSmsStatus.parse("2"))
