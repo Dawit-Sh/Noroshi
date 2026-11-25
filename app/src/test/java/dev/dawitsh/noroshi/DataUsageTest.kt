@@ -56,6 +56,33 @@ class DataUsageTest {
     }
 
     @Test
+    fun `real statistics answer after the app's four writes`() {
+        // Written to the router on 2026-11-25 with the app's exact bodies (500 GB, 25 Nov to 25 Dec, 0 used).
+        val t = AsrTraffic.parse(fixture("statistics_bundle.xml"))
+        assertEquals(CountMode.Period, t.mode)
+        assertFalse("the cut-off stayed off", t.cutOff)
+        val b = t.bundle(today)!!
+        assertEquals(gbToBytes(500.0), b.size)
+        assertEquals(2_146_281L, b.used)
+        assertEquals(LocalDate.of(2026, 11, 25), b.start)
+        assertEquals(LocalDate.of(2026, 12, 25), b.end)
+        assertEquals(30L, b.daysLeft(today))
+        assertTrue(b.percent < 0.01)
+        assertEquals(1_996_668_763L, t.lifetime)
+        assertEquals(listOf(MonthUsage(2026, 11, 1_996_570_529L)), t.history)
+
+        // "Disabled" (what the app's bundle is removed with) shows no bundle, though size and dates stay stored.
+        val off = AsrTraffic.parse(
+            XmlNode.parse(
+                "<RGW><WanStatistics><stat_mang_method>0</stat_mang_method><total_available_period>536870912000</total_available_period>" +
+                    "<period_start_date>26,11,25</period_start_date><period_end_date>26,12,25</period_end_date></WanStatistics></RGW>"
+            )
+        )
+        assertEquals(CountMode.Off, off.mode)
+        assertNull(off.bundle(today))
+    }
+
+    @Test
     fun `statistics with a period bundle`() {
         val xml = """<RGW><statistics><WanStatistics><stat_mang_method>2</stat_mang_method>
             <total_used_month>10</total_used_month><total_used_period>${375 * GB}</total_used_period>
