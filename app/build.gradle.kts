@@ -12,13 +12,13 @@ val keystoreProperties = Properties().apply {
 }
 
 android {
-    namespace = "et.frectonz.kimem"
+    namespace = "dev.dawitsh.noroshi"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "et.frectonz.kimem"
+        applicationId = "dev.dawitsh.noroshi"
         minSdk = 24
         targetSdk = 37
         versionCode = 1

@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Kimem"
+rootProject.name = "Noroshi"
 include(":app")

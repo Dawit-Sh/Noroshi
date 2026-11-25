@@ -1,7 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">Kimem</string>
-    <string name="app_title">Kimem ቅመም</string>
-    <string name="app_subtitle">Safaricom Kimem MIFI</string>
+    <string name="app_name">Noroshi</string>
+    <string name="app_title">Noroshi 狼煙</string>
+    <string name="app_subtitle">Safaricom MiFi and Stellar router</string>
     <string name="app_subtitle_stellar">Stellar 8400 4G CPE (ASR panel)</string>
 
     <string name="back">Back</string>
@@ -23,7 +23,7 @@
 
     <string name="commands">Commands</string>
     <string name="quick_actions">Quick actions</string>
-    <string name="usage_prefix">kimem %1$s</string>
+    <string name="usage_prefix">noroshi %1$s</string>
     <string name="action">Action</string>
     <string name="router_footer">router %1$s · %2$s</string>
     <string name="router_footer_type">%1$s · %2$s · %3$s</string>
