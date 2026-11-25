@@ -49,6 +49,7 @@ import dev.dawitsh.noroshi.di.container
 import dev.dawitsh.noroshi.ui.MenuAction
 import dev.dawitsh.noroshi.ui.Node
 import dev.dawitsh.noroshi.ui.Route
+import dev.dawitsh.noroshi.ui.components.LocalNetworkBox
 import dev.dawitsh.noroshi.ui.components.MonoButton
 import dev.dawitsh.noroshi.ui.components.MonoDialog
 import dev.dawitsh.noroshi.ui.components.MonoDivider
@@ -173,6 +174,10 @@ fun MenuScreen(
                 .padding(inner),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         ) {
+            if (isRoot) {
+                item { LocalNetworkBox(Modifier.padding(top = 8.dp)) }
+            }
+
             item {
                 Text(
                     menu?.let { stringResource(it.description) } ?: stringResource(R.string.unknown_command),

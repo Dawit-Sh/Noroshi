@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 17+: reaching the router needs local network access -->
+    <string name="local_network_title">Local network</string>
+    <string name="local_network_body">To reach the router, Noroshi needs to see devices on your Wi-Fi. Android asks for this from Android 17 on.</string>
+    <string name="local_network_allow">Allow</string>
+    <string name="local_network_denied">Local network access wasn\'t allowed, so Noroshi can\'t reach the router.</string>
+</resources>
