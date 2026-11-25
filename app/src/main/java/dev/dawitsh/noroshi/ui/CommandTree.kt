@@ -38,6 +38,7 @@ val COMMAND_TREE = Node.Menu(
                 report(ReportKind.Device),
                 report(ReportKind.Wifi),
                 report(ReportKind.Devices),
+                Node.Leaf("data", R.string.desc_data, Route.Data),
                 Node.Menu(
                     "sms", R.string.desc_get_sms, listOf(
                         Node.Leaf("list", R.string.desc_sms_list, Route.SmsInbox),
@@ -54,6 +55,7 @@ val COMMAND_TREE = Node.Menu(
             "post", R.string.desc_post, listOf(
                 Node.Action("reboot", R.string.desc_reboot, MenuAction.Reboot),
                 Node.Leaf("ussd", R.string.desc_ussd, Route.Ussd(), usage = "<code>"),
+                Node.Leaf("bundle", R.string.desc_bundle, Route.DataBundle, usage = "<gb> <start> <end>"),
                 Node.Menu(
                     "sms", R.string.desc_post_sms, listOf(
                         Node.Leaf("send", R.string.desc_sms_send, Route.SendSms(), usage = "<number> <message>"),
@@ -70,6 +72,7 @@ private fun Route.supportedBy(type: RouterType): Boolean = when (this) {
     is Route.Report -> kind in type.reports
     Route.SmsInbox, Route.SmsShow, is Route.SmsMessage, is Route.SendSms, is Route.SmsSelect -> type.has(Feature.Sms)
     is Route.Ussd -> type.has(Feature.Ussd)
+    Route.Data, Route.DataBundle -> type.has(Feature.Data)
     is Route.Menu, Route.Settings -> true
 }
 

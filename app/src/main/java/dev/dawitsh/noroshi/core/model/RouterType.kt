@@ -21,7 +21,12 @@ enum class ReportKind(@StringRes val title: Int, @StringRes val description: Int
 }
 
 /** Things a router can do besides showing reports. */
-enum class Feature { Sms, Ussd, Reboot }
+enum class Feature {
+    Sms, Ussd, Reboot,
+
+    /** The Data screen: the router's own count against a bundle, and the alerts. */
+    Data,
+}
 
 /**
  * The router families the app can talk to. Each one lists what it can show, so the
@@ -39,7 +44,8 @@ enum class RouterType(
         R.string.app_subtitle,
         "192.168.0.1",
         ReportKind.entries.toSet(),
-        Feature.entries.toSet(),
+        // Its monthly totals are in `get internet`; the bundle count is Stellar only.
+        Feature.entries.toSet() - Feature.Data,
     ),
 
     /** Stellar 8400 4G CPE and other ASR / Marvell "Duster" panels. */
@@ -57,7 +63,7 @@ enum class RouterType(
             ReportKind.Devices,
             ReportKind.SmsInfo,
         ),
-        setOf(Feature.Sms, Feature.Reboot),
+        setOf(Feature.Sms, Feature.Reboot, Feature.Data),
     );
 
     fun has(feature: Feature): Boolean = feature in features

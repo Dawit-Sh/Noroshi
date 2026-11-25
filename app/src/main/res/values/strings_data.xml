@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Data usage (the router's own count against a bundle) -->
+    <string name="desc_data">Data used: the bundle, today, this month, per device</string>
+    <string name="desc_bundle">Set the bundle the router counts against</string>
+    <string name="quick_data">Data</string>
+    <string name="data_title">Data</string>
+
+    <string name="data_bundle">Bundle</string>
+    <string name="data_used_word">used</string>
+    <string name="data_used">Used</string>
+    <string name="data_left">Left</string>
+    <string name="data_size">Size</string>
+    <string name="data_period">Period</string>
+    <string name="data_period_value">%1$s → %2$s</string>
+    <string name="data_ends">Ends</string>
+    <string name="data_ends_today">Today</string>
+    <string name="data_ends_tomorrow">Tomorrow (%1$s)</string>
+    <string name="data_ends_on">In %1$d days (%2$s)</string>
+    <string name="data_ended">Ended %1$s</string>
+    <string name="data_pace">Pace</string>
+    <string name="data_pace_value">%1$s a day; lasts until %2$s</string>
+    <string name="data_pace_value_short">%1$s a day</string>
+    <string name="data_over">Over by</string>
+    <string name="data_cut_off">Cut off at the limit</string>
+    <string name="data_cut_off_on">On (the router stops the internet at the limit)</string>
+    <string name="data_cut_off_off">Off</string>
+    <string name="data_mode_period">per period</string>
+    <string name="data_mode_month">per month</string>
+    <string name="data_mode_unlimited">no end date</string>
+
+    <string name="data_no_bundle">No bundle set</string>
+    <string name="data_no_bundle_body">The router counts anyway: %1$s this month. Set your bundle and it counts against it, so the app can tell you how much is left.</string>
+    <string name="data_set_bundle">Set bundle</string>
+    <string name="data_change_bundle">New bundle</string>
+    <string name="data_correct">Correct used</string>
+
+    <string name="data_usage">Usage</string>
+    <string name="data_today">Today</string>
+    <string name="data_today_since">%1$s (since %2$s)</string>
+    <string name="data_this_month">This month</string>
+    <string name="data_in_bundle">This bundle</string>
+    <string name="data_all_time">All counted</string>
+    <string name="data_read_at">Read at</string>
+    <string name="data_months">Months</string>
+    <string name="data_devices">Devices</string>
+    <string name="data_device_online">%1$s (online)</string>
+    <string name="data_device_value">%1$s this month\n%2$s last 3 days</string>
+    <string name="data_devices_note">— means the router\'s count for that device is broken. This firmware miscounts most Wi-Fi devices, so only some show.</string>
+    <string name="data_no_devices">No devices</string>
+
+    <string name="data_alerts">Alerts</string>
+    <string name="data_alerts_on">At %1$s used, and %2$s before the bundle ends. Checked every 15 minutes while the phone is on the router\'s Wi-Fi.</string>
+    <string name="data_alerts_on_no_days">At %1$s used. Checked every 15 minutes while the phone is on the router\'s Wi-Fi.</string>
+    <string name="data_alerts_off">Alerts are off.</string>
+    <string name="data_alerts_turn_on">Turn alerts on</string>
+    <string name="data_alerts_ask">To tell you at %1$s used, Noroshi needs to show notifications.</string>
+    <string name="data_alerts_allow">Allow notifications</string>
+    <string name="data_alerts_denied">Notifications weren\'t allowed, so the alerts can\'t show.</string>
+    <string name="data_alerts_blocked">Notifications are turned off for Noroshi, so the alerts can\'t show.</string>
+    <string name="data_days_list">%1$s days</string>
+
+    <string name="data_correct_title">Correct the count</string>
+    <string name="data_correct_body">Enter what Safaricom says (*704# or their SMS). The router\'s count for this bundle is set to it.</string>
+    <string name="data_amount_left">Left now</string>
+    <string name="data_amount_used">Used so far</string>
+    <string name="data_amount_gb">%1$s (GB)</string>
+    <string name="data_correct_preview">The router will count %1$s used of %2$s.</string>
+    <string name="data_write">Write to router</string>
+    <string name="data_writing">Writing</string>
+    <string name="data_corrected">Count corrected</string>
+    <string name="data_bundle_set">Bundle set on the router</string>
+    <string name="err_data_amount">Enter a number of GB, no more than the bundle size</string>
+
+    <string name="bundle_title">Set bundle</string>
+    <string name="bundle_size">Bundle size (GB)</string>
+    <string name="bundle_start">Start (yyyy-mm-dd)</string>
+    <string name="bundle_days">Valid for (days)</string>
+    <string name="bundle_end">Ends (yyyy-mm-dd)</string>
+    <string name="bundle_help">The router counts the SIM\'s data from the start date to the end date against this size. 1 GB = 1024 MB, as the router counts.</string>
+    <string name="bundle_preview">Writes to the router: count per period from %1$s to %2$s (%3$d days), against %4$s, with %5$s used. The cut-off at the limit stays off.</string>
+    <string name="bundle_confirm_title">Write the bundle?</string>
+    <string name="bundle_problem_size">Enter the bundle size in GB.</string>
+    <string name="bundle_problem_dates">The end must be after the start (dates as yyyy-mm-dd).</string>
+    <string name="bundle_problem_today">Today must be inside the period; the router refuses one that hasn\'t started or has ended.</string>
+    <string name="bundle_problem_used">The amount must be between 0 and the bundle size.</string>
+    <string name="bundle_reading">Reading the router</string>
+
+    <!-- Notifications -->
+    <string name="data_channel">Data usage</string>
+    <string name="data_channel_desc">How much of the data bundle is used, and when it ends</string>
+    <string name="data_alert_used">Data bundle %1$d%% used</string>
+    <string name="data_alert_used_up">Data bundle used up</string>
+    <string name="data_alert_used_body">%1$s used, %2$s left of %3$s</string>
+    <string name="data_alert_ends_today">Data bundle ends today</string>
+    <string name="data_alert_ends_tomorrow">Data bundle ends tomorrow</string>
+    <plurals name="data_alert_ends_in">
+        <item quantity="one">Data bundle ends in %1$d day</item>
+        <item quantity="other">Data bundle ends in %1$d days</item>
+    </plurals>
+    <string name="data_alert_ending_body">%1$s left of %2$s (%3$d%% used)</string>
+    <string name="data_ends_today_short">ends today</string>
+    <string name="data_ends_tomorrow_short">ends tomorrow</string>
+    <plurals name="data_ends_in_short">
+        <item quantity="one">ends in %1$d day</item>
+        <item quantity="other">ends in %1$d days</item>
+    </plurals>
+
+    <!-- Home screen widget -->
+    <string name="widget_label">Data</string>
+    <string name="widget_description">How much of the data bundle is used</string>
+    <string name="widget_empty">Open Noroshi on the router\'s Wi-Fi</string>
+    <string name="widget_detail">%1$s left · %2$s</string>
+    <string name="widget_detail_no_end">%1$s left of %2$s</string>
+    <string name="widget_as_of">as of %1$s</string>
+
+    <!-- Settings -->
+    <string name="settings_data_alerts">Data alerts</string>
+    <string name="settings_alerts_switch_on">On</string>
+    <string name="settings_alerts_switch_off">Off</string>
+    <string name="settings_alert_percents">Notify at percent used</string>
+    <string name="settings_alert_days">Notify days before the end</string>
+    <string name="settings_alerts_help">Each alert comes once per bundle. The check runs every 15 minutes while the phone is on the router\'s Wi-Fi (Stellar only).</string>
+</resources>

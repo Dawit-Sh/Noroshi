@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The data widget follows the app: ink on paper, swapped at night. -->
+    <color name="widget_fg">@color/ink</color>
+    <color name="widget_bg">@color/paper</color>
+</resources>

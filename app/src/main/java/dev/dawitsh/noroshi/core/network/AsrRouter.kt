@@ -3,8 +3,15 @@ package dev.dawitsh.noroshi.core.network
 import android.util.Log
 import dev.dawitsh.noroshi.R
 import dev.dawitsh.noroshi.core.model.ActionResult
+import dev.dawitsh.noroshi.core.model.AsrDeviceUsage
 import dev.dawitsh.noroshi.core.model.AsrDevices
 import dev.dawitsh.noroshi.core.model.AsrStatus
+import dev.dawitsh.noroshi.core.model.AsrTraffic
+import dev.dawitsh.noroshi.core.model.BundlePlan
+import dev.dawitsh.noroshi.core.model.CUT_OFF_OFF
+import dev.dawitsh.noroshi.core.model.CountMode
+import dev.dawitsh.noroshi.core.model.DeviceUsage
+import dev.dawitsh.noroshi.core.model.correction
 import dev.dawitsh.noroshi.core.model.Message
 import dev.dawitsh.noroshi.core.model.ReportKind
 import dev.dawitsh.noroshi.core.model.RouterException
@@ -38,6 +45,34 @@ class AsrRouter(
     suspend fun status(): AsrStatus = AsrStatus.parse(transport.get("status1"))
 
     suspend fun devices(): AsrDevices = AsrDevices.parse(transport.get("device_management_all"))
+
+    /** The router's own data count and bundle settings (`file=statistics`). */
+    suspend fun traffic(): AsrTraffic = AsrTraffic.parse(transport.get("statistics"))
+
+    /** Per-device use (`file=device_management`); counts above [cap] are dropped as broken. */
+    suspend fun deviceUsage(cap: Long?): List<DeviceUsage> = AsrDeviceUsage.parse(transport.get("device_management"), cap)
+
+    /**
+     * Makes the router count against [plan]: per period, its dates, its size, and the used amount,
+     * each written the way the panel's buttons write it. The cut-off at the limit is never turned
+     * on; if the firmware turns it on by itself while setting up, it is turned back off.
+     */
+    suspend fun setBundle(plan: BundlePlan): AsrTraffic {
+        val before = traffic()
+        for (fields in plan.writes()) transport.set(STATISTICS, fields)
+        var after = traffic()
+        if (after.cutOff && !before.cutOff) {
+            transport.set(STATISTICS, CUT_OFF_OFF)
+            after = traffic()
+        }
+        return after
+    }
+
+    /** Sets the used amount of the current count, for when the operator's figure differs. */
+    suspend fun correctUsed(mode: CountMode, used: Long): AsrTraffic {
+        transport.set(STATISTICS, correction(mode, used))
+        return traffic()
+    }
 
     override suspend fun report(kind: ReportKind): Show = when (kind) {
         ReportKind.Info -> status().info()
@@ -81,4 +116,8 @@ class AsrRouter(
     override suspend fun ussdCancel() = Unit
 
     override suspend fun ussdAwaitResponse(): String = unsupported()
+
+    private companion object {
+        const val STATISTICS = "statistics"
+    }
 }

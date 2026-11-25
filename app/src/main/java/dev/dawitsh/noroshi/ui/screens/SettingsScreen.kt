@@ -1,5 +1,8 @@
 package dev.dawitsh.noroshi.ui.screens
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -35,10 +39,13 @@ import dev.dawitsh.noroshi.R
 import dev.dawitsh.noroshi.core.data.NoticeCenter
 import dev.dawitsh.noroshi.core.data.RouterRepository
 import dev.dawitsh.noroshi.core.data.SettingsRepository
+import dev.dawitsh.noroshi.core.data.UsageRepository
+import dev.dawitsh.noroshi.core.model.AlertSettings
 import dev.dawitsh.noroshi.core.model.RouterType
 import dev.dawitsh.noroshi.core.model.Settings
 import dev.dawitsh.noroshi.core.model.ThemeMode
 import dev.dawitsh.noroshi.core.model.res
+import dev.dawitsh.noroshi.core.work.UsageNotifier
 import dev.dawitsh.noroshi.di.container
 import dev.dawitsh.noroshi.ui.Route
 import dev.dawitsh.noroshi.ui.leafCrumbs
@@ -56,19 +63,42 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
+/** The data alerts as typed in Settings. */
+data class AlertForm(val enabled: Boolean, val percents: String, val days: String) {
+    fun settings(): AlertSettings = AlertSettings(
+        enabled = enabled,
+        percents = AlertSettings.parseList(percents, 1..100).ifEmpty { AlertSettings.DEFAULT_PERCENTS },
+        endingDays = AlertSettings.parseList(days, 0..60),
+    )
+
+    companion object {
+        fun of(settings: AlertSettings) =
+            AlertForm(settings.enabled, AlertSettings.format(settings.percents), AlertSettings.format(settings.endingDays))
+    }
+}
+
 class SettingsViewModel(
     private val repository: SettingsRepository,
     private val routers: RouterRepository,
+    private val usage: UsageRepository,
     private val notices: NoticeCenter,
 ) : ViewModel() {
     private val state = MutableStateFlow<Settings?>(null)
     val form: StateFlow<Settings?> = state.asStateFlow()
+
+    private val alertState = MutableStateFlow<AlertForm?>(null)
+    val alerts: StateFlow<AlertForm?> = alertState.asStateFlow()
+
+    fun updateAlerts(transform: (AlertForm) -> AlertForm) {
+        alertState.value = alertState.value?.let(transform)
+    }
 
     private val detectingState = MutableStateFlow(false)
     val detecting: StateFlow<Boolean> = detectingState.asStateFlow()
 
     init {
         viewModelScope.launch { state.value = repository.settings.first() }
+        viewModelScope.launch { alertState.value = AlertForm.of(usage.alertSettings.first()) }
     }
 
     fun update(transform: (Settings) -> Settings) {
@@ -112,6 +142,7 @@ class SettingsViewModel(
         val current = state.value ?: return
         viewModelScope.launch {
             repository.save(current.copy(router = current.router.trim().ifEmpty { current.type.defaultHost }))
+            alertState.value?.let { usage.saveAlertSettings(it.settings()) }
             notices.post(res(R.string.settings_saved))
             onSaved()
         }
@@ -119,7 +150,9 @@ class SettingsViewModel(
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer { SettingsViewModel(container.settingsRepository, container.routerRepository, container.notices) }
+            initializer {
+                SettingsViewModel(container.settingsRepository, container.routerRepository, container.usageRepository, container.notices)
+            }
         }
     }
 }
@@ -128,6 +161,10 @@ class SettingsViewModel(
 fun SettingsScreen(onCrumb: (Route) -> Unit, onBack: () -> Unit, vm: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)) {
     val form by vm.form.collectAsStateWithLifecycle()
     val detecting by vm.detecting.collectAsStateWithLifecycle()
+    val alerts by vm.alerts.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    // Turning the alerts on is where the notification permission is asked for, if it is missing.
+    val askNotifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     var showPassword by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
@@ -193,6 +230,39 @@ fun SettingsScreen(onCrumb: (Route) -> Unit, onBack: () -> Unit, vm: SettingsVie
                     )
                 },
             )
+
+            alerts?.let { a ->
+                SectionHeader(stringResource(R.string.settings_data_alerts))
+                MonoSegmented(
+                    options = listOf(stringResource(R.string.settings_alerts_switch_on), stringResource(R.string.settings_alerts_switch_off)),
+                    selected = if (a.enabled) 0 else 1,
+                    onSelect = { index ->
+                        vm.updateAlerts { it.copy(enabled = index == 0) }
+                        if (index == 0 && UsageNotifier.needsPermission(context)) {
+                            askNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(16.dp))
+                MonoTextField(
+                    value = a.percents,
+                    onValueChange = { v -> vm.updateAlerts { it.copy(percents = v) } },
+                    label = stringResource(R.string.settings_alert_percents),
+                    placeholder = AlertSettings.format(AlertSettings.DEFAULT_PERCENTS),
+                    enabled = a.enabled,
+                )
+                Spacer(Modifier.height(16.dp))
+                MonoTextField(
+                    value = a.days,
+                    onValueChange = { v -> vm.updateAlerts { it.copy(days = v) } },
+                    label = stringResource(R.string.settings_alert_days),
+                    placeholder = AlertSettings.format(AlertSettings.DEFAULT_ENDING_DAYS),
+                    enabled = a.enabled,
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(stringResource(R.string.settings_alerts_help), style = MaterialTheme.typography.bodySmall, color = ink())
+            }
 
             SectionHeader(stringResource(R.string.appearance))
             MonoSegmented(

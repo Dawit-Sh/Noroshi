@@ -20,6 +20,8 @@ import androidx.navigation.compose.rememberNavController
 import dev.dawitsh.noroshi.core.data.NoticeCenter
 import dev.dawitsh.noroshi.ui.components.MonoSnackbar
 import dev.dawitsh.noroshi.ui.components.paper
+import dev.dawitsh.noroshi.ui.screens.BundleScreen
+import dev.dawitsh.noroshi.ui.screens.DataScreen
 import dev.dawitsh.noroshi.ui.screens.MenuScreen
 import dev.dawitsh.noroshi.ui.screens.ReportScreen
 import dev.dawitsh.noroshi.ui.screens.SendSmsScreen
@@ -31,7 +33,7 @@ import dev.dawitsh.noroshi.ui.screens.SmsShowScreen
 import dev.dawitsh.noroshi.ui.screens.UssdScreen
 
 @Composable
-fun NoroshiApp(notices: NoticeCenter) {
+fun NoroshiApp(notices: NoticeCenter, openData: Int = 0) {
     val navController = rememberNavController()
     val snackbar = remember { SnackbarHostState() }
     val context = LocalContext.current
@@ -44,6 +46,11 @@ fun NoroshiApp(notices: NoticeCenter) {
     val back: () -> Unit = { navController.popBackStack() }
     val jump: (Route) -> Unit = { target ->
         if (!navController.popBackStack(target, inclusive = false)) navController.navigate(target)
+    }
+
+    // A tapped data alert opens the Data screen.
+    LaunchedEffect(openData) {
+        if (openData > 0) navController.navigate(Route.Data) { launchSingleTop = true }
     }
 
     Box(
@@ -61,6 +68,8 @@ fun NoroshiApp(notices: NoticeCenter) {
             composable<Route.SendSms> { SendSmsScreen(onCrumb = jump, onBack = back) }
             composable<Route.SmsSelect> { SmsSelectScreen(onCrumb = jump, onBack = back) }
             composable<Route.Ussd> { UssdScreen(onCrumb = jump, onBack = back) }
+            composable<Route.Data> { DataScreen(onNavigate = navigate, onCrumb = jump, onBack = back) }
+            composable<Route.DataBundle> { BundleScreen(onCrumb = jump, onBack = back) }
         }
 
         SnackbarHost(

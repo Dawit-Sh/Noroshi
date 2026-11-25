@@ -39,6 +39,12 @@ sealed interface Route {
 
     @Serializable
     data class Ussd(val code: String = "") : Route
+
+    @Serializable
+    data object Data : Route
+
+    @Serializable
+    data object DataBundle : Route
 }
 
 data class Crumb(val label: String, val target: Route? = null)

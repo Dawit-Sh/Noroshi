@@ -290,8 +290,10 @@ private class Quick(val label: Int, val primary: Boolean = false, val enabled: B
 private fun QuickActions(type: RouterType, marking: Boolean, onNavigate: (Route) -> Unit, onMarkAllRead: () -> Unit) {
     val sms = type.has(Feature.Sms)
     val ussd = type.has(Feature.Ussd)
+    val data = type.has(Feature.Data)
     val buttons = listOfNotNull(
         Quick(R.string.quick_inbox, primary = true) { onNavigate(Route.SmsInbox) }.takeIf { sms },
+        Quick(R.string.quick_data, primary = true) { onNavigate(Route.Data) }.takeIf { data },
         Quick(R.string.quick_balance, primary = true) { onNavigate(Route.Ussd("*704#")) }.takeIf { ussd },
         Quick(R.string.quick_devices, primary = !sms) { onNavigate(Route.Report(ReportKind.Devices)) }
             .takeIf { ReportKind.Devices in type.reports },
