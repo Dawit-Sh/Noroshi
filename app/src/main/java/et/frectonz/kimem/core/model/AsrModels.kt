@@ -3,6 +3,7 @@ package et.frectonz.kimem.core.model
 import et.frectonz.kimem.R
 import et.frectonz.kimem.core.codec.XmlNode
 import et.frectonz.kimem.core.codec.fmtSeconds
+import et.frectonz.kimem.core.codec.humanSize
 import et.frectonz.kimem.core.codec.ucs2Decode
 import java.net.URLDecoder
 
@@ -68,8 +69,10 @@ data class AsrStatus(
     val mnc: String,
     val apn: AsrApn,
     val pdp: List<AsrPdp>,
-    val txStat: String,
-    val rxStat: String,
+    val rxBytes: Long?,
+    val txBytes: Long?,
+    val rxBytesAll: Long?,
+    val txBytesAll: Long?,
     val lanIp: String,
     val lanMask: String,
     val lanMac: String,
@@ -196,8 +199,10 @@ data class AsrStatus(
             R.string.asr_ipv6 to orDash(p?.globalIpv6?.ifEmpty { p.ipv6 } ?: ""),
             R.string.asr_connected_for to (p?.connectedSeconds?.let { plain(fmtSeconds(it)) } ?: res(R.string.dash)),
             R.string.asr_total_connected to (p?.totalSeconds?.let { plain(fmtSeconds(it)) } ?: res(R.string.dash)),
-            R.string.asr_sent to orDash(txStat),
-            R.string.asr_received to orDash(rxStat),
+            R.string.asr_received to bytes(rxBytes),
+            R.string.asr_sent to bytes(txBytes),
+            R.string.asr_received_all to bytes(rxBytesAll),
+            R.string.asr_sent_all to bytes(txBytesAll),
         )
     }
 
@@ -301,8 +306,10 @@ data class AsrStatus(
                         totalSeconds = item.at("totalconntime").toLongOrNull()?.takeIf { it >= 0 },
                     )
                 },
-                txStat = stats.t("tx"),
-                rxStat = stats.t("rx"),
+                rxBytes = stats.t("rx_byte").toLongOrNull(),
+                txBytes = stats.t("tx_byte").toLongOrNull(),
+                rxBytesAll = stats.t("rx_byte_all").toLongOrNull(),
+                txBytesAll = stats.t("tx_byte_all").toLongOrNull(),
                 lanIp = lan?.at("ip") ?: "",
                 lanMask = lan?.at("mask") ?: "",
                 lanMac = lan?.at("mac") ?: "",
@@ -379,9 +386,12 @@ class AsrDevices(val devices: List<AsrDevice>) : Show {
             }
         )
 
-        /** `conn_time` is "hours,minutes,seconds". */
+        /**
+         * `conn_time` is "hours,minutes,seconds"; this firmware writes "5 hours,15 mins, 18 secs".
+         * The panel takes the leading number of each part (parseInt), and so does this.
+         */
         fun fmtConnTime(raw: String): String {
-            val parts = raw.split(',').map { it.trim().toLongOrNull() }
+            val parts = raw.split(',').map { Regex("""^\s*(\d+)""").find(it)?.groupValues?.get(1)?.toLongOrNull() }
             if (parts.size != 3 || parts.any { it == null }) return raw
             return fmtSeconds(parts[0]!! * 3_600 + parts[1]!! * 60 + parts[2]!!)
         }
@@ -391,6 +401,8 @@ class AsrDevices(val devices: List<AsrDevice>) : Show {
 private fun show(title: Int, vararg pairs: Pair<Int, UiText>): Show = object : Show {
     override fun table() = Report.KeyValues(res(title), rows(*pairs))
 }
+
+private fun bytes(value: Long?): UiText = value?.let { plain(humanSize(it)) } ?: res(R.string.dash)
 
 private fun flagLabel(raw: String): UiText = when (raw) {
     "1" -> res(R.string.enabled)

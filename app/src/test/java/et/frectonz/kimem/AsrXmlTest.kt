@@ -106,6 +106,7 @@ class AsrXmlTest {
     @Test
     fun connectionTime() {
         assertEquals("1h 2m 3s", AsrDevices.fmtConnTime("1,2,3"))
+        assertEquals("38m 50s", AsrDevices.fmtConnTime("0 hours,38 mins, 50 secs"))
         assertEquals("odd", AsrDevices.fmtConnTime("odd"))
     }
 }

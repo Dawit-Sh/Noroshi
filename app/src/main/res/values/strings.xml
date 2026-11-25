@@ -317,6 +317,8 @@
     <string name="asr_total_connected">Total Connected</string>
     <string name="asr_sent">Sent</string>
     <string name="asr_received">Received</string>
+    <string name="asr_sent_all">Sent (all time)</string>
+    <string name="asr_received_all">Received (all time)</string>
     <string name="asr_auto_apn">Auto APN</string>
     <string name="asr_lte_apn">LTE APN</string>
     <string name="asr_model">Model</string>
