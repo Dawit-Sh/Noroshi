@@ -377,6 +377,19 @@ class AsrSmsTest {
     }
 
     /**
+     * On the real Stellar (2026-11-25) mark read worked but left `sms_cmd` on the command before
+     * it (6), so it must count as done after its quick look instead of failing or waiting long.
+     */
+    @Test
+    fun markReadIsDoneWhenTheRouterNeverReportsIt() = runTest {
+        val router = FakeRouter(mapOf(SmsBox.Inbox to listOf(listOf(item("LRCV1", status = "0")))), statuses = listOf(status("6", "3")))
+        var pauses = 0
+        router.client(pause = { pauses++ }).markSms(listOf(1))
+        assertTrue(router.calls.any { it.second.contains("<read_message_id>LRCV1</read_message_id>") })
+        assertEquals(AsrSmsClient.MARK_POLLS - 1, pauses)
+    }
+
+    /**
      * Answers like the router: a list `set` picks the folder and page the next `get` shows; after
      * any other `set`, `get`s walk through [statuses] (the last one repeats).
      */
