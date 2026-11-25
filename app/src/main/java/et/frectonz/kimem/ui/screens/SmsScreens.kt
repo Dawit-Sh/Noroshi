@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -44,6 +45,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.toRoute
 import et.frectonz.kimem.R
+import et.frectonz.kimem.core.codec.SmsLength
 import et.frectonz.kimem.core.data.NoticeCenter
 import et.frectonz.kimem.core.data.RouterRepository
 import et.frectonz.kimem.core.data.SettingsRepository
@@ -51,6 +53,7 @@ import et.frectonz.kimem.core.model.ActionResult
 import et.frectonz.kimem.core.model.Message
 import et.frectonz.kimem.core.model.MessageStatus
 import et.frectonz.kimem.core.model.MsgSelector
+import et.frectonz.kimem.core.model.SmsBox
 import et.frectonz.kimem.core.model.SmsInbox
 import et.frectonz.kimem.core.model.res
 import et.frectonz.kimem.core.network.Router
@@ -73,6 +76,7 @@ import et.frectonz.kimem.ui.components.MonoIconButton
 import et.frectonz.kimem.ui.components.MonoListItem
 import et.frectonz.kimem.ui.components.MonoTag
 import et.frectonz.kimem.ui.components.MonoTextField
+import et.frectonz.kimem.ui.components.MonoSegmented
 import et.frectonz.kimem.ui.components.MonoTopBar
 import et.frectonz.kimem.ui.components.ink
 import et.frectonz.kimem.ui.components.paper
@@ -139,6 +143,8 @@ fun SmsInboxScreen(
     vm: SmsInboxViewModel = viewModel(factory = SmsInboxViewModel.Factory),
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
+    // 0 is every folder; 1.. are SmsBox entries, for routers that keep messages in folders.
+    var folderTab by rememberSaveable { mutableIntStateOf(0) }
 
     Scaffold(
         containerColor = paper(),
@@ -159,10 +165,29 @@ fun SmsInboxScreen(
                 is Load.Error -> item { ErrorBox(current.message.string(), onRetry = vm::load) }
                 is Load.Ready -> {
                     val inbox = current.value
-                    if (inbox.messages.isEmpty()) {
+                    val hasFolders = inbox.messages.any { it.folder != null }
+                    val folder = if (hasFolders) SmsBox.entries.getOrNull(folderTab - 1) else null
+                    val shown = if (folder == null) inbox.messages else inbox.messages.filter { it.folder == res(folder.label) }
+                    if (hasFolders) {
+                        item {
+                            MonoSegmented(
+                                options = listOf(stringResource(R.string.sms_box_all)) + SmsBox.entries.map { stringResource(it.label) },
+                                selected = folderTab,
+                                onSelect = { folderTab = it },
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                            Spacer(Modifier.height(12.dp))
+                        }
+                    }
+                    if (shown.isEmpty()) {
                         item {
                             MonoBox(Modifier.fillMaxWidth()) {
-                                Text(stringResource(R.string.inbox_empty), style = MaterialTheme.typography.bodyMedium, color = ink())
+                                Text(
+                                    if (folder == null) stringResource(R.string.inbox_empty)
+                                    else stringResource(R.string.sms_folder_empty, stringResource(folder.label)),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = ink(),
+                                )
                             }
                         }
                     } else {
@@ -173,7 +198,7 @@ fun SmsInboxScreen(
                                     .fillMaxWidth()
                                     .border(1.dp, ink)
                             ) {
-                                inbox.messages.asReversed().forEachIndexed { index, message ->
+                                shown.asReversed().forEachIndexed { index, message ->
                                     if (index > 0) MonoDivider()
                                     MessageRow(message) { onNavigate(Route.SmsMessage(message.id)) }
                                 }
@@ -197,6 +222,10 @@ private fun MessageRow(message: Message, onClick: () -> Unit) {
         trailing = {
             Column(horizontalAlignment = Alignment.End) {
                 MonoTag(message.tag.label.string(), inverted = message.tag is MessageStatus.Unread)
+                message.folder?.let {
+                    Spacer(Modifier.height(4.dp))
+                    MonoTag(it.string())
+                }
                 Spacer(Modifier.height(4.dp))
                 Text("#${message.id}", style = MaterialTheme.typography.labelSmall, color = ink())
             }
@@ -295,11 +324,12 @@ fun SmsMessageScreen(
                 is Load.Ready -> {
                     val message = current.value
                     KeyValueTable(
-                        stringResource(R.string.message_title), listOf(
+                        stringResource(R.string.message_title), listOfNotNull(
                             stringResource(R.string.message_id) to message.id.toString(),
                             stringResource(R.string.message_number) to message.number,
                             stringResource(R.string.message_status) to message.tag.label.string(),
                             stringResource(R.string.message_date) to message.date.display(),
+                            message.folder?.let { stringResource(R.string.message_folder) to it.string() },
                         )
                     )
                     Spacer(Modifier.height(12.dp))
@@ -593,8 +623,10 @@ fun SendSmsScreen(onCrumb: (Route) -> Unit, onBack: () -> Unit, vm: SendSmsViewM
             )
             Spacer(Modifier.height(8.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                val parts = SmsLength.of(state.message).parts
                 Text(
-                    pluralStringResource(R.plurals.chars_count, state.message.length, state.message.length),
+                    pluralStringResource(R.plurals.chars_count, state.message.length, state.message.length) +
+                        if (parts > 1) " · " + pluralStringResource(R.plurals.sms_parts, parts, parts) else "",
                     style = MaterialTheme.typography.labelSmall,
                     color = ink(),
                 )

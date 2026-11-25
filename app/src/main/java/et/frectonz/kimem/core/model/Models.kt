@@ -9,6 +9,7 @@ import et.frectonz.kimem.core.codec.humanSize
 import et.frectonz.kimem.core.codec.truncateChars
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 @Serializable
 class GetRandomLogin(@SerialName("random_login") val randomLogin: String)
@@ -260,6 +261,8 @@ class Message(
     @Serializable(with = Ucs2::class) val content: String,
     @Serializable(with = MessageStatusSerializer::class) val tag: MessageStatus,
     @Serializable(with = RouterDateTimeSerializer::class) val date: RouterDateTime,
+    /** Which of the router's folders it sits in, for routers that have more than one (the Stellar). */
+    @Transient val folder: UiText? = null,
 ) : Show {
     override fun table() = Report.KeyValues(
         res(R.string.message_title), rows(
@@ -268,7 +271,7 @@ class Message(
             R.string.message_status to tag.label,
             R.string.message_date to plain(date.display()),
             R.string.message_content to plain(content.trim()),
-        )
+        ) + listOfNotNull(folder?.let { res(R.string.message_folder) to it })
     )
 }
 

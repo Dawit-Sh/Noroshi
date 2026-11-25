@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- SMS folders on Stellar (ASR "Duster") routers -->
+    <string name="sms_box_inbox">inbox</string>
+    <string name="sms_box_sent">sent</string>
+    <string name="sms_box_sim">sim</string>
+    <string name="sms_box_drafts">drafts</string>
+    <string name="sms_box_all">all</string>
+    <string name="sms_box_inbox_title">Inbox</string>
+    <string name="sms_box_sent_title">Sent</string>
+    <string name="sms_box_sim_title">SIM</string>
+    <string name="sms_box_drafts_title">Drafts</string>
+    <string name="sms_folder_empty">No messages in %1$s</string>
+    <string name="message_folder">Folder</string>
+
+    <string name="status_failed">FAILED</string>
+    <string name="status_draft">DRAFT</string>
+
+    <string name="sms_validity">Validity</string>
+    <string name="sms_validity_12h">12 hours</string>
+    <string name="sms_validity_day">1 day</string>
+    <string name="sms_validity_week">1 week</string>
+    <string name="sms_validity_max">Maximum</string>
+
+    <string name="sms_doing_send">Sending</string>
+    <string name="sms_doing_delete">Deleting</string>
+    <string name="sms_doing_mark">Marking as read</string>
+    <string name="err_sms_no_recipient">No recipient number</string>
+    <string name="err_sms_too_long">Message too long: %1$d of %2$d characters</string>
+    <string name="err_sms_timeout">%1$s timed out; the router never said it was done</string>
+    <string name="err_sms_failed">%1$s failed (router status %2$s)</string>
+
+    <plurals name="sms_parts">
+        <item quantity="one">%1$d SMS</item>
+        <item quantity="other">%1$d SMS</item>
+    </plurals>
+</resources>

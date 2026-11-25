@@ -56,6 +56,16 @@ sealed interface MessageStatus {
         override val label = res(R.string.status_sent)
     }
 
+    /** A sent message the network refused (Stellar only). */
+    data object Failed : MessageStatus {
+        override val label = res(R.string.status_failed)
+    }
+
+    /** A message saved in the router's drafts (Stellar only). */
+    data object Draft : MessageStatus {
+        override val label = res(R.string.status_draft)
+    }
+
     data class Unknown(val tag: String) : MessageStatus {
         override val label = res(R.string.status_unknown, tag)
     }
