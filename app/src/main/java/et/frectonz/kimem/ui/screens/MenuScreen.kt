@@ -40,12 +40,14 @@ import et.frectonz.kimem.R
 import et.frectonz.kimem.core.data.NoticeCenter
 import et.frectonz.kimem.core.data.RouterRepository
 import et.frectonz.kimem.core.data.SettingsRepository
+import et.frectonz.kimem.core.model.Feature
+import et.frectonz.kimem.core.model.ReportKind
+import et.frectonz.kimem.core.model.RouterType
 import et.frectonz.kimem.core.model.Settings
 import et.frectonz.kimem.core.model.res
 import et.frectonz.kimem.di.container
 import et.frectonz.kimem.ui.MenuAction
 import et.frectonz.kimem.ui.Node
-import et.frectonz.kimem.ui.ReportKind
 import et.frectonz.kimem.ui.Route
 import et.frectonz.kimem.ui.components.MonoButton
 import et.frectonz.kimem.ui.components.MonoDialog
@@ -149,7 +151,7 @@ fun MenuScreen(
     val state by vm.uiState.collectAsStateWithLifecycle()
     val settings by vm.settings.collectAsStateWithLifecycle()
     val path = vm.path
-    val menu = resolveMenu(path)
+    val menu = resolveMenu(settings.type, path)
     val isRoot = path.isEmpty()
     var pendingAction by remember { mutableStateOf<MenuAction?>(null) }
 
@@ -210,7 +212,7 @@ fun MenuScreen(
             if (isRoot) {
                 item {
                     SectionHeader(stringResource(R.string.quick_actions))
-                    QuickActions(marking = state.marking, onNavigate = onNavigate, onMarkAllRead = vm::markAllRead)
+                    QuickActions(settings.type, marking = state.marking, onNavigate = onNavigate, onMarkAllRead = vm::markAllRead)
                 }
                 item {
                     Spacer(Modifier.height(24.dp))
@@ -224,7 +226,7 @@ fun MenuScreen(
                     ) {
                         MonoDivider()
                         Text(
-                            stringResource(R.string.router_footer, settings.router, settings.username),
+                            stringResource(R.string.router_footer_type, stringResource(settings.type.label), settings.router, settings.username),
                             style = MaterialTheme.typography.bodySmall,
                             color = ink(),
                             modifier = Modifier.padding(vertical = 12.dp),
@@ -277,25 +279,37 @@ private fun NodeRow(node: Node, onClick: () -> Unit) {
     }
 }
 
+private class Quick(val label: Int, val primary: Boolean = false, val enabled: Boolean = true, val onClick: () -> Unit)
+
 @Composable
-private fun QuickActions(marking: Boolean, onNavigate: (Route) -> Unit, onMarkAllRead: () -> Unit) {
+private fun QuickActions(type: RouterType, marking: Boolean, onNavigate: (Route) -> Unit, onMarkAllRead: () -> Unit) {
+    val sms = type.has(Feature.Sms)
+    val ussd = type.has(Feature.Ussd)
+    val buttons = listOfNotNull(
+        Quick(R.string.quick_inbox, primary = true) { onNavigate(Route.SmsInbox) }.takeIf { sms },
+        Quick(R.string.quick_balance, primary = true) { onNavigate(Route.Ussd("*704#")) }.takeIf { ussd },
+        Quick(R.string.quick_devices, primary = !sms) { onNavigate(Route.Report(ReportKind.Devices)) }
+            .takeIf { ReportKind.Devices in type.reports },
+        Quick(R.string.quick_bundles) { onNavigate(Route.Ussd("*777*02#")) }.takeIf { ussd },
+        Quick(R.string.quick_signal, primary = !sms) { onNavigate(Route.Report(ReportKind.Signal)) }
+            .takeIf { !sms && ReportKind.Signal in type.reports },
+        Quick(R.string.quick_send_sms) { onNavigate(Route.SendSms()) }.takeIf { sms },
+        Quick(if (marking) R.string.marking else R.string.quick_mark_all_read, enabled = !marking) { onMarkAllRead() }.takeIf { sms },
+    )
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MonoButton(stringResource(R.string.quick_inbox), { onNavigate(Route.SmsInbox) }, Modifier.weight(1f), primary = true)
-            MonoButton(stringResource(R.string.quick_balance), { onNavigate(Route.Ussd("*704#")) }, Modifier.weight(1f), primary = true)
-        }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MonoButton(stringResource(R.string.quick_devices), { onNavigate(Route.Report(ReportKind.Devices)) }, Modifier.weight(1f))
-            MonoButton(stringResource(R.string.quick_bundles), { onNavigate(Route.Ussd("*777*02#")) }, Modifier.weight(1f))
-        }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MonoButton(stringResource(R.string.quick_send_sms), { onNavigate(Route.SendSms()) }, Modifier.weight(1f))
-            MonoButton(
-                if (marking) stringResource(R.string.marking) else stringResource(R.string.quick_mark_all_read),
-                onMarkAllRead,
-                Modifier.weight(1f),
-                enabled = !marking,
-            )
+        buttons.chunked(2).forEach { row ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                row.forEach { b ->
+                    MonoButton(
+                        stringResource(b.label),
+                        b.onClick,
+                        Modifier.weight(1f),
+                        primary = b.primary,
+                        enabled = b.enabled,
+                    )
+                }
+                if (row.size == 1) Spacer(Modifier.weight(1f))
+            }
         }
     }
 }

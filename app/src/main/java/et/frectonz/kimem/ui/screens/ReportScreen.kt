@@ -55,7 +55,6 @@ import et.frectonz.kimem.ui.components.MonoIconButton
 import et.frectonz.kimem.ui.components.MonoTopBar
 import et.frectonz.kimem.ui.components.ink
 import et.frectonz.kimem.ui.components.paper
-import et.frectonz.kimem.ui.fetchReport
 import et.frectonz.kimem.ui.leafCrumbs
 import et.frectonz.kimem.ui.load
 import et.frectonz.kimem.ui.string
@@ -81,7 +80,7 @@ class ReportViewModel(
     fun load() {
         viewModelScope.launch {
             state.value = Load.Loading
-            state.value = load { repository.session { fetchReport(kind) } }
+            state.value = load { repository.session { report(kind) } }
         }
     }
 

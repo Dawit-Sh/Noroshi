@@ -2,6 +2,7 @@
     <string name="app_name">Kimem</string>
     <string name="app_title">Kimem ቅመም</string>
     <string name="app_subtitle">Safaricom Kimem MIFI</string>
+    <string name="app_subtitle_stellar">Stellar 8400 4G CPE (ASR panel)</string>
 
     <string name="back">Back</string>
     <string name="refresh">Refresh</string>
@@ -25,6 +26,8 @@
     <string name="usage_prefix">kimem %1$s</string>
     <string name="action">Action</string>
     <string name="router_footer">router %1$s · %2$s</string>
+    <string name="router_footer_type">%1$s · %2$s · %3$s</string>
+    <string name="quick_signal">Signal</string>
     <string name="quick_inbox">Inbox</string>
     <string name="quick_balance">Balance</string>
     <string name="quick_devices">Devices</string>
@@ -247,6 +250,13 @@
     <string name="dial_tag">dial %1$s</string>
 
     <string name="router_section">Router</string>
+    <string name="router_type_mifi">Safaricom MiFi</string>
+    <string name="router_type_stellar">Stellar</string>
+    <string name="router_type_help">Stellar is the Stellar 8400 4G CPE and other routers with the ASR panel (192.168.100.1). Detect looks for the router on this Wi-Fi without logging in.</string>
+    <string name="detect">Detect router</string>
+    <string name="detecting">Detecting…</string>
+    <string name="detect_found">Found a %1$s router at %2$s. Save to keep it.</string>
+    <string name="detect_none">No router answered at this address or the default ones</string>
     <string name="address">Address</string>
     <string name="address_placeholder">192.168.0.1</string>
     <string name="username">Username</string>
@@ -278,4 +288,44 @@
     <string name="ussd_op_not_supported">operation not supported</string>
     <string name="ussd_not_supported">USSD not supported</string>
     <string name="ussd_unexpected">unexpected status code %1$s</string>
+    <string name="err_non_xml">Router returned a non-XML response: %1$s</string>
+    <string name="err_password_required">Enter the router password in Settings</string>
+    <string name="err_asr_no_challenge">The router did not offer a Digest login at /login.cgi. Check the router type in Settings.</string>
+    <string name="err_asr_session_lost">The router closed the session. Is someone else logged in to its web page?</string>
+    <string name="err_not_supported">Not available for the %1$s router yet</string>
+
+    <string name="signal_bars_4">%1$d/4</string>
+    <string name="asr_bars_dbm">%1$d/4 (%2$d dBm)</string>
+    <string name="asr_operator">Operator</string>
+    <string name="asr_sim">SIM</string>
+    <string name="asr_sim_ready">Ready</string>
+    <string name="asr_sim_pin">PIN required</string>
+    <string name="asr_sim_puk">PUK required</string>
+    <string name="asr_sim_locked">Locked</string>
+    <string name="asr_sim_error">SIM error</string>
+    <string name="asr_sim_absent">No SIM</string>
+    <string name="asr_no_service">No service</string>
+    <string name="asr_mode">Mode</string>
+    <string name="asr_signal_index">Signal Index</string>
+    <string name="asr_bars">Bars</string>
+    <string name="asr_roaming">Roaming</string>
+    <string name="asr_connection">Connection</string>
+    <string name="asr_connecting">Connecting</string>
+    <string name="asr_pdp">Data Profile</string>
+    <string name="asr_ipv6">IPv6</string>
+    <string name="asr_connected_for">Connected For</string>
+    <string name="asr_total_connected">Total Connected</string>
+    <string name="asr_sent">Sent</string>
+    <string name="asr_received">Received</string>
+    <string name="asr_auto_apn">Auto APN</string>
+    <string name="asr_lte_apn">LTE APN</string>
+    <string name="asr_model">Model</string>
+    <string name="asr_hardware">Hardware</string>
+    <string name="asr_lan_ip">LAN IP</string>
+    <string name="asr_lan_mac">LAN MAC</string>
+    <string name="asr_wifi_on">WiFi</string>
+    <string name="asr_security">Security</string>
+    <string name="asr_auto">Auto</string>
+    <string name="asr_dhcp_server">DHCP Server</string>
+    <string name="asr_online">Online</string>
 </resources>

@@ -33,7 +33,9 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import et.frectonz.kimem.R
 import et.frectonz.kimem.core.data.NoticeCenter
+import et.frectonz.kimem.core.data.RouterRepository
 import et.frectonz.kimem.core.data.SettingsRepository
+import et.frectonz.kimem.core.model.RouterType
 import et.frectonz.kimem.core.model.Settings
 import et.frectonz.kimem.core.model.ThemeMode
 import et.frectonz.kimem.core.model.res
@@ -56,10 +58,14 @@ import kotlinx.coroutines.launch
 
 class SettingsViewModel(
     private val repository: SettingsRepository,
+    private val routers: RouterRepository,
     private val notices: NoticeCenter,
 ) : ViewModel() {
     private val state = MutableStateFlow<Settings?>(null)
     val form: StateFlow<Settings?> = state.asStateFlow()
+
+    private val detectingState = MutableStateFlow(false)
+    val detecting: StateFlow<Boolean> = detectingState.asStateFlow()
 
     init {
         viewModelScope.launch { state.value = repository.settings.first() }
@@ -69,14 +75,43 @@ class SettingsViewModel(
         state.value = state.value?.let(transform)
     }
 
+    /** Back to the defaults of the router type picked now. */
     fun reset() {
-        state.value = Settings()
+        val type = state.value?.type ?: Settings().type
+        state.value = Settings(type = type, router = type.defaultHost)
+    }
+
+    /** Switches the router type; an address still at the other type's default moves to this one's. */
+    fun selectType(type: RouterType) {
+        update { current ->
+            val atDefault = RouterType.entries.any { it.defaultHost == current.router.trim() } || current.router.isBlank()
+            current.copy(type = type, router = if (atDefault) type.defaultHost else current.router)
+        }
+    }
+
+    fun detect() {
+        val current = state.value ?: return
+        if (detectingState.value) return
+        detectingState.value = true
+        viewModelScope.launch {
+            try {
+                val found = routers.detect(current.router)
+                if (found == null) {
+                    notices.post(res(R.string.detect_none))
+                } else {
+                    update { it.copy(type = found.type, router = found.host) }
+                    notices.post(res(R.string.detect_found, res(found.type.label), found.host))
+                }
+            } finally {
+                detectingState.value = false
+            }
+        }
     }
 
     fun save(onSaved: () -> Unit) {
         val current = state.value ?: return
         viewModelScope.launch {
-            repository.save(current.copy(router = current.router.trim().ifEmpty { Settings().router }))
+            repository.save(current.copy(router = current.router.trim().ifEmpty { current.type.defaultHost }))
             notices.post(res(R.string.settings_saved))
             onSaved()
         }
@@ -84,7 +119,7 @@ class SettingsViewModel(
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer { SettingsViewModel(container.settingsRepository, container.notices) }
+            initializer { SettingsViewModel(container.settingsRepository, container.routerRepository, container.notices) }
         }
     }
 }
@@ -92,6 +127,7 @@ class SettingsViewModel(
 @Composable
 fun SettingsScreen(onCrumb: (Route) -> Unit, onBack: () -> Unit, vm: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)) {
     val form by vm.form.collectAsStateWithLifecycle()
+    val detecting by vm.detecting.collectAsStateWithLifecycle()
     var showPassword by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
@@ -113,11 +149,27 @@ fun SettingsScreen(onCrumb: (Route) -> Unit, onBack: () -> Unit, vm: SettingsVie
             }
 
             SectionHeader(stringResource(R.string.router_section), Modifier.padding(top = 0.dp))
+            MonoSegmented(
+                options = RouterType.entries.map { stringResource(it.label) },
+                selected = RouterType.entries.indexOf(current.type),
+                onSelect = { index -> vm.selectType(RouterType.entries[index]) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(8.dp))
+            MonoButton(
+                stringResource(if (detecting) R.string.detecting else R.string.detect),
+                vm::detect,
+                Modifier.fillMaxWidth(),
+                enabled = !detecting,
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(stringResource(R.string.router_type_help), style = MaterialTheme.typography.bodySmall, color = ink())
+            Spacer(Modifier.height(16.dp))
             MonoTextField(
                 value = current.router,
                 onValueChange = { value -> vm.update { it.copy(router = value) } },
                 label = stringResource(R.string.address),
-                placeholder = stringResource(R.string.address_placeholder),
+                placeholder = current.type.defaultHost,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
             )
             Spacer(Modifier.height(16.dp))

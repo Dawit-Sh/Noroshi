@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import et.frectonz.kimem.core.model.RouterType
 import et.frectonz.kimem.core.model.Settings
 import et.frectonz.kimem.core.model.ThemeMode
 import kotlinx.coroutines.flow.Flow
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.map
 val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 class SettingsRepository(private val store: DataStore<Preferences>) {
+    private val type = stringPreferencesKey("router_type")
     private val router = stringPreferencesKey("router")
     private val username = stringPreferencesKey("username")
     private val password = stringPreferencesKey("password")
@@ -23,6 +25,7 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
     val settings: Flow<Settings> = store.data.map { prefs ->
         val defaults = Settings()
         Settings(
+            type = RouterType.fromName(prefs[type]) ?: defaults.type,
             router = prefs[router] ?: defaults.router,
             username = prefs[username] ?: defaults.username,
             password = prefs[password] ?: defaults.password,
@@ -30,14 +33,26 @@ class SettingsRepository(private val store: DataStore<Preferences>) {
         )
     }
 
+    /** False until a router type was saved or detected; until then the app tries to find the router itself. */
+    val typeKnown: Flow<Boolean> = store.data.map { RouterType.fromName(it[type]) != null }
+
     val lastRecipient: Flow<String> = store.data.map { it[lastRecipientKey] ?: "" }
 
     suspend fun save(updated: Settings) {
         store.edit {
+            it[type] = updated.type.name
             it[router] = updated.router
             it[username] = updated.username
             it[password] = updated.password
             it[theme] = updated.theme.name
+        }
+    }
+
+    /** Saves a detected router without touching the login or the theme. */
+    suspend fun saveDetected(detectedType: RouterType, host: String) {
+        store.edit {
+            it[type] = detectedType.name
+            it[router] = host
         }
     }
 

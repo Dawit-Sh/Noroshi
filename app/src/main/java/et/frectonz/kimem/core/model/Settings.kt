@@ -8,7 +8,8 @@ enum class ThemeMode(@StringRes val labelRes: Int) {
 }
 
 data class Settings(
-    val router: String = "192.168.0.1",
+    val type: RouterType = RouterType.SafaricomMifi,
+    val router: String = RouterType.SafaricomMifi.defaultHost,
     val username: String = "admin",
     val password: String = "admin",
     val theme: ThemeMode = ThemeMode.System,

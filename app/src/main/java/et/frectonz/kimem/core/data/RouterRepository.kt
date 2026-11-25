@@ -1,5 +1,6 @@
 package et.frectonz.kimem.core.data
 
+import et.frectonz.kimem.core.network.Detected
 import et.frectonz.kimem.core.network.Router
 import et.frectonz.kimem.core.network.RouterClient
 import kotlinx.coroutines.channels.BufferOverflow
@@ -17,9 +18,18 @@ class RouterRepository(
     val inboxChanges: SharedFlow<Unit> = inboxChangesFlow.asSharedFlow()
 
     suspend fun open(): Router {
-        val current = settings.settings.first()
-        return client.open(current.router, current.username, current.password)
+        var current = settings.settings.first()
+        if (!settings.typeKnown.first()) {
+            // First run: find out which router this is before the first login.
+            client.detector.find(current.router)?.let { found ->
+                settings.saveDetected(found.type, found.host)
+                current = current.copy(type = found.type, router = found.host)
+            }
+        }
+        return client.open(current.type, current.router, current.username, current.password)
     }
+
+    suspend fun detect(host: String): Detected? = client.detector.find(host)
 
     suspend fun <T> session(block: suspend Router.() -> T): T = open().session(block)
 

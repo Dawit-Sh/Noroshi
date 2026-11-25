@@ -2,6 +2,9 @@ package et.frectonz.kimem.ui
 
 import androidx.annotation.StringRes
 import et.frectonz.kimem.R
+import et.frectonz.kimem.core.model.Feature
+import et.frectonz.kimem.core.model.ReportKind
+import et.frectonz.kimem.core.model.RouterType
 
 sealed interface Node {
     val name: String
@@ -63,8 +66,32 @@ val COMMAND_TREE = Node.Menu(
     )
 )
 
-fun resolveMenu(path: List<String>): Node.Menu? {
-    var node: Node.Menu = COMMAND_TREE
+private fun Route.supportedBy(type: RouterType): Boolean = when (this) {
+    is Route.Report -> kind in type.reports
+    Route.SmsInbox, Route.SmsShow, is Route.SmsMessage, is Route.SendSms, is Route.SmsSelect -> type.has(Feature.Sms)
+    is Route.Ussd -> type.has(Feature.Ussd)
+    is Route.Menu, Route.Settings -> true
+}
+
+private fun MenuAction.supportedBy(type: RouterType): Boolean = when (this) {
+    MenuAction.Reboot -> type.has(Feature.Reboot)
+}
+
+private fun Node.Menu.only(type: RouterType): Node.Menu = copy(
+    children = children.mapNotNull { node ->
+        when (node) {
+            is Node.Menu -> node.only(type).takeIf { it.children.isNotEmpty() }
+            is Node.Leaf -> node.takeIf { it.target.supportedBy(type) }
+            is Node.Action -> node.takeIf { it.action.supportedBy(type) }
+        }
+    }
+)
+
+/** The command tree with only the commands [type] can answer. */
+fun commandTree(type: RouterType): Node.Menu = COMMAND_TREE.only(type).copy(description = type.subtitle)
+
+fun resolveMenu(type: RouterType, path: List<String>): Node.Menu? {
+    var node: Node.Menu = commandTree(type)
     for (segment in path) {
         node = node.children.filterIsInstance<Node.Menu>().firstOrNull { it.name == segment } ?: return null
     }
