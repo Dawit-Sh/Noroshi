@@ -10,6 +10,7 @@ import et.frectonz.kimem.core.codec.parseSmsTime
 import et.frectonz.kimem.core.codec.smsHexDecode
 import et.frectonz.kimem.core.codec.smsTimeNow
 import et.frectonz.kimem.core.codec.ucs2Encode
+import et.frectonz.kimem.core.model.AsrSmsCmdStatus
 import et.frectonz.kimem.core.model.AsrSmsInfo
 import et.frectonz.kimem.core.model.AsrSmsPage
 import et.frectonz.kimem.core.model.AsrSmsRequests
@@ -197,6 +198,44 @@ class AsrSmsTest {
         assertFalse(info.statusReport)
         assertEquals("1", info.saveLocation)
         assertEquals("255", info.validity)
+    }
+
+    private fun fixture(name: String): XmlNode =
+        XmlNode.parse(javaClass.getResourceAsStream("/stellar/$name")!!.bufferedReader().readText())
+
+    /** The Stellar's real answer to the inbox list (2026-11-25): counts and settings, an empty list. */
+    @Test
+    fun realInboxAnswerParses() {
+        val root = fixture("message_inbox_empty.xml")
+        val page = AsrSmsPage.parse(root, SmsBox.Inbox)
+        assertTrue(page.messages.isEmpty())
+        assertEquals(1, page.totalPages)
+
+        val info = AsrSmsInfo.parse(root)
+        assertEquals(180, info.capacity.deviceTotal)
+        assertEquals(100, info.capacity.inboxTotal)
+        assertEquals(101, info.capacity.inboxUsed)
+        assertEquals(50, info.capacity.sentTotal)
+        assertEquals(0, info.capacity.sentUsed)
+        assertEquals(30, info.capacity.draftsTotal)
+        assertEquals(2, info.capacity.simTotal)
+        assertEquals(0, info.capacity.simUsed)
+        assertEquals("+251700060105", info.center)
+        assertFalse(info.statusReport)
+        assertEquals("1", info.saveLocation)
+        assertEquals("255", info.validity)
+        assertEquals("3", AsrSmsCmdStatus.parse(root).result)
+    }
+
+    /** A `get` before any list was picked: every count is empty, which must not throw. */
+    @Test
+    fun realPlainAnswerHasEmptyCounts() {
+        val root = fixture("message_plain.xml")
+        assertTrue(AsrSmsPage.parse(root, SmsBox.Inbox).messages.isEmpty())
+        assertEquals(0, AsrSmsPage.parse(root, SmsBox.Inbox).totalPages)
+        val info = AsrSmsInfo.parse(root)
+        assertNull(info.capacity.inboxTotal)
+        assertEquals("+251700060105", info.center)
     }
 
     @Test
