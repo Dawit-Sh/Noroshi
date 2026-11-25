@@ -266,6 +266,25 @@ class AsrSmsTest {
         assertEquals("Test text from a phone", router.client().message(200_001).content.trim())
     }
 
+    /**
+     * A text the app's send request really sent (2026-11-25, number replaced): the Sent folder
+     * names it `LSNT1`, puts the recipient in `from` and marks it status 3.
+     */
+    @Test
+    fun realSentMessageParses() = runTest {
+        val page = AsrSmsPage.parse(fixture("message_sent_one.xml"), SmsBox.Sent)
+        val sms = page.messages.single()
+        assertEquals("LSNT1", sms.index)
+        assertEquals("+251900000032", sms.number)
+        assertEquals("Noroshi test: sent from the router", sms.text)
+        assertEquals(LocalDateTime.of(2026, 11, 25, 13, 19, 32), sms.received)
+        assertEquals(MessageStatus.Sent, sms.messageStatus())
+
+        val raw = javaClass.getResourceAsStream("/stellar/message_sent_one.xml")!!.bufferedReader().readText()
+        val item = Regex("<Item[\\s\\S]*?</Item>").find(raw)!!.value
+        assertEquals(listOf(100_001), FakeRouter(mapOf(SmsBox.Sent to listOf(listOf(item)))).client().inbox().messages.map { it.id })
+    }
+
     /** The device inbox numbers its messages from 0 (`LRCV0` was a real one). */
     @Test
     fun inboxNamesStartAtZero() = runTest {
